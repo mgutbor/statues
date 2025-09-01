@@ -84,5 +84,6 @@ npm run lint
 - Aplicar granularidad de [Atomic web design](https://bradfrost.com/blog/post/atomic-web-design/) para componentes.
 - Realizar test E2E con Playwright o Cypress.
 - Instalación de la PWA en Android.
+- Instalación de [husky](https://github.com/typicode/husky) como dependencia de desarrollo para pre-commit hooks (lint, tests).
 - Desactivar el botón de ranking si no hay jugadores registrados.
 - No tener jugadores diferentes que solo se diferencien por mayúsculas/minúsculas.
