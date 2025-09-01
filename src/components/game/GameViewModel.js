@@ -225,4 +225,11 @@ export class GameViewModel extends LitElement {
     window.history.pushState({}, '', '/');
     window.dispatchEvent(new PopStateEvent('popstate'));
   }
+
+  getGameLightVariantClasses() {
+    return {
+      'game__light--green': this.isGreen,
+      'game__light--red': !this.isGreen,
+    };
+  }
 }

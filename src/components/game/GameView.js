@@ -2,6 +2,8 @@ import { html } from 'lit';
 import { GameViewModel } from './GameViewModel.js';
 import { GameStyles } from './css/game.styles.css.js';
 import '../../core/components/layout/LayoutView.js';
+import { GAME_LIGHT_VARIANT } from './model/GameModel.js';
+import { classMap } from 'lit/directives/class-map.js';
 
 export class GameView extends GameViewModel {
   static styles = [GameStyles];
@@ -28,13 +30,11 @@ export class GameView extends GameViewModel {
               Puntuación actual: ${this.player?.score}
             </div>
             <div
-              class="game__light ${this.isGreen
-                ? 'game__light--green'
-                : 'game__light--red'}"
+              class="game__light ${classMap(this.getGameLightVariantClasses())}"
               role="status"
               aria-live="polite"
             >
-              ${this.isGreen ? 'VERDE' : 'ROJO'}
+              ${this.isGreen ? GAME_LIGHT_VARIANT.GREEN : GAME_LIGHT_VARIANT.RED}
             </div>
           </section>
 
