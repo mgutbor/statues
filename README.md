@@ -23,7 +23,8 @@ Aplicación web progresiva (PWA) basada en el juego **Red Light, Green Light**. 
 - **Ranking**: Vista con máximo por jugador, restringida a los 5 jugadores con mayor puntuación (bonus).
 - **Audio y Vibración (bonus)**: Sonido durante verde con `playbackRate` adaptado y vibración en pérdidas (`solo en dispositivos Android`).
 - **Tests unitarios**: Jest + jsdom para vistas y servicios (`PlayerService`, vistas y componentes).
-- **Linter**: ESLint con plugin `lit` y configuración base.
+- **Linter**: ESLint con plugins `lit` + `lit-a11y`.
+- **Despliegue**: Se ha realizado en Netlify. Puedes probar la aplicación [aquí](https://statues-mgb.netlify.app/).
 
 ---
 
@@ -84,4 +85,4 @@ npm run lint
 - Realizar test E2E con Playwright o Cypress.
 - Instalación de la PWA en Android.
 - Desactivar el botón de ranking si no hay jugadores registrados.
-- No tener jugadores con el mismo nombre que solo se diferencien por mayúsculas/minúsculas.
+- No tener jugadores diferentes que solo se diferencien por mayúsculas/minúsculas.
