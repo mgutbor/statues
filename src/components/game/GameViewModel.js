@@ -178,7 +178,7 @@ export class GameViewModel extends LitElement {
       this.savePlayer();
       
       if (lost) this._vibrate(VIBRATION_FAIL_PATTERN);
-      this.requestUpdate();
+      this.player = { ...this.player };
       return;
     }
 
@@ -193,7 +193,7 @@ export class GameViewModel extends LitElement {
     this.lastButton = buttonId;
     if (this.player.score > this.player.maxScore) this.player.maxScore = this.player.score;
     this.savePlayer();
-    this.requestUpdate();
+    this.player = { ...this.player };
   }
 
   exitToHome() {
