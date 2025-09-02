@@ -4,7 +4,9 @@ const STORAGE_KEY = 'players';
 const CURRENT_PLAYER_KEY = 'currentPlayer';
 
 export class PlayerService {
-  // crea o carga (si existe) y marca como current
+  /**
+   * Crea el jugador o lo carga (si existe) y lo marca como current
+   */
   static createOrLoad(name) {
     const players = PlayerService._loadAll();
     let player = players.find(p => p.name === name);
@@ -17,7 +19,9 @@ export class PlayerService {
     return player;
   }
 
-  // carga el jugador marcado como current
+  /**
+   * Carga el jugador marcado como current
+   */
   static loadCurrent() {
     const currentName = localStorage.getItem(CURRENT_PLAYER_KEY);
     if (!currentName) return null;
@@ -25,7 +29,9 @@ export class PlayerService {
     return players.find(p => p.name === currentName) || null;
   }
 
-  // guarda un Player (objeto con name, score, maxScore)
+  /**
+   * Guarda un jugador (objeto con name, score, maxScore)
+   */
   static save(player) {
     const players = PlayerService._loadAll();
     const index = players.findIndex(p => p.name === player.name);
@@ -35,12 +41,13 @@ export class PlayerService {
     PlayerService._setCurrent(player.name);
   }
 
-  // devuelve todos los players (array)
+  /**
+   * devuelve todos los jugadores
+   */
   static getAll() {
     return PlayerService._loadAll();
   }
 
-  // --- privados ---
   static _loadAll() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];

@@ -1,5 +1,18 @@
 import { LitElement } from 'lit';
 import { PlayerService } from '../../core/services/PlayerService.js';
+import { AudioService } from '../../core/services/AudioService.js';
+
+import {
+  GREEN_LIGHT_BASE_DURATION,
+  RED_LIGHT_DURATION,
+  MIN_GREEN_LIGHT_DURATION,
+  DEFAULT_AUDIO_VOLUME,
+  MIN_PLAYBACK_RATE,
+  GREEN_LIGHT_JITTER_RANGE,
+  GREEN_LIGHT_JITTER_OFFSET,
+  VIBRATION_FAIL_PATTERN,
+  VIBRATION__STEP_PENALTY
+} from './model/GameModel.js';
 
 export class GameViewModel extends LitElement {
   static get properties() {
@@ -41,12 +54,14 @@ export class GameViewModel extends LitElement {
     this.player = null;
     this.isGreen = false;
     this.lastButton = null;
-    this.greenLightDuration = 10000;
-    this.redLightDuration = 3000;
+    this.greenLightDuration = GREEN_LIGHT_BASE_DURATION;
+    this.redLightDuration = RED_LIGHT_DURATION;
     this._greenTimeout = null; // timeout interno para ciclo verde
     this._redTimeout = null; // timeout interno para ciclo rojo
     this._audioElement = null; // elemento audio para música de fondo
     this.audioAllowed = false;
+
+    this.audioService = new AudioService('/audio/game.mp3', { loop: true, volume: DEFAULT_AUDIO_VOLUME });
   }
 
   /**
@@ -55,7 +70,6 @@ export class GameViewModel extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this.loadPlayer();
-    this._setupAudio();
     this.startCycle();
 
     // Permitir audio en iOS/Android tras primer toque en PWA
@@ -72,11 +86,7 @@ export class GameViewModel extends LitElement {
     super.disconnectedCallback();
     clearTimeout(this._greenTimeout);
     clearTimeout(this._redTimeout);
-    if (this._audioElement) {
-      this._audioElement.pause();
-      this._audioElement.remove();
-      this._audioElement = null;
-    }
+    this.audioService?.remove();
   }
 
   loadPlayer() {
@@ -95,32 +105,13 @@ export class GameViewModel extends LitElement {
   }
 
   /**
-   * Configura el elemento de audio para el juego
-   */
-  _setupAudio() {
-    // create once
-    if (this._audioElement) return;
-
-    if (typeof Audio === 'undefined') {
-      console.warn("Audio API no soportada en este navegador.");
-      return;
-    }
-    
-    this._audioElement = document.createElement('audio');
-    this._audioElement.src = '/audio/game.mp3';
-    this._audioElement.loop = true;
-    this._audioElement.volume = 0.75;
-    this._audioElement.preload = 'auto';
-  }
-
-  /**
    * Permite reproducir audio tras interacción del usuario.
    */
   allowAudio() {
-    if (!this.audioAllowed && this._audioElement) {
-      this._audioElement.play()
-        .then(() => { this.audioAllowed = true; })
-        .catch(e => { console.warn('Audio bloqueado hasta interacción', e); });
+    if (!this.audioAllowed && this.audioService) {
+      this.audioService.play().then(() => {
+        this.audioAllowed = true;
+      });
     }
   }
 
@@ -133,37 +124,22 @@ export class GameViewModel extends LitElement {
 
   toRed() {
     this.isGreen = false;
-    this.lastButton = null; // reset alternation at red
-    this.requestUpdate();
+    this.lastButton = null;
     clearTimeout(this._greenTimeout);
     clearTimeout(this._redTimeout);
     this._redTimeout = setTimeout(() => this.toGreen(), this.redLightDuration);
-    // pause audio
-    if (this._audioElement) {
-      try {
-        this._audioElement.pause();
-      } catch (e) {
-        console.warn("No se pudo pausar el audio:", e);
-      }
-    }
+    
+    this.audioService?.pause();
   }
 
   toGreen() {
     this.isGreen = true;
     this.greenLightDuration = this._calculateGreenDuration();
-    this.requestUpdate();
     // adjust audio playback rate according to green duration
     if (this._audioElement) {
-      this._audioElement.play().catch(()=>{
-        console.warn("El navegador bloqueó la reproducción automática.");
-      });
-      // normalize to base 10000ms -> playbackRate = 10000 / greenDuration
-      try {
-        this._audioElement.playbackRate = Math.max(0.5, 10000 / this.greenLightDuration);
-      } catch (e) {
-        // some browsers restrict playbackRate changes for certain sources
-        console.warn("No se pudo ajustar la velocidad del audio:", e);
-      }
+      this.audioService?.play();
+      const rate = Math.max(MIN_PLAYBACK_RATE, GREEN_LIGHT_BASE_DURATION / this.greenLightDuration);
+      this.audioService.setPlaybackRate(rate);
     }
     clearTimeout(this._greenTimeout);
     clearTimeout(this._redTimeout);
@@ -174,9 +150,9 @@ export class GameViewModel extends LitElement {
    * Calcula la duración del estado verde del semáforo según puntuación (base) y azar (jitter).
    */
   _calculateGreenDuration() {
-    const base = Math.max(10000 - (this.player?.score || 0) * 100, 2000);
-    const jitter = Math.floor(Math.random() * 3001) - 1500; // -1500..+1500
-    return Math.max(2000, base + jitter);
+    const base = Math.max(GREEN_LIGHT_BASE_DURATION - (this.player?.score || 0) * 100, MIN_GREEN_LIGHT_DURATION);
+    const jitter = Math.floor(Math.random() * GREEN_LIGHT_JITTER_RANGE) - GREEN_LIGHT_JITTER_OFFSET; // -1500..+1500
+    return Math.max(MIN_GREEN_LIGHT_DURATION, base + jitter);
   }
 
   /**
@@ -201,7 +177,7 @@ export class GameViewModel extends LitElement {
       this.lastButton = null;
       this.savePlayer();
       
-      if (lost) this._vibrate([300, 100, 300]);
+      if (lost) this._vibrate(VIBRATION_FAIL_PATTERN);
       this.requestUpdate();
       return;
     }
@@ -209,7 +185,7 @@ export class GameViewModel extends LitElement {
     // comportamiento con semáforo en verde: los botones alternos ganan 1 por clic, el mismo botón consecutivo -1
     if (this.lastButton === buttonId) {
       this.player.score = Math.max(0, this.player.score - 1);
-      this._vibrate(200);
+      this._vibrate(VIBRATION__STEP_PENALTY);
     } else {
       this.player.score += 1;
     }

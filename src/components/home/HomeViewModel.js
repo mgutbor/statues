@@ -15,12 +15,6 @@ export class HomeViewModel extends LitElement {
        * Se usa para habilitar o deshabilitar el botón "Iniciar".
        */
       isValid: { type: Boolean },
-
-      /**
-       * Guarda la referencia al `beforeinstallprompt` del navegador.
-       * Permite mostrar el diálogo de instalación de la PWA.
-       */
-      deferredPrompt: { type: Object },
     };
   }
 
@@ -28,34 +22,6 @@ export class HomeViewModel extends LitElement {
     super();
     this.playerName = '';
     this.isValid = false;
-    this.deferredPrompt = null;
-  }
-
-  connectedCallback() {
-    super.connectedCallback();
-    window.addEventListener('beforeinstallprompt', e => {
-      e.preventDefault();
-      this.deferredPrompt = e;
-      this.requestUpdate();
-    });
-  }
-
-  disconnectedCallback() {
-    super.disconnectedCallback();
-    window.removeEventListener('beforeinstallprompt', this._handleBeforeInstallPrompt);
-  }
-
-  /**
-   * Maneja el evento de instalación de la PWA.
-   * Llama a `prompt()` para abrir el popup de instalación
-   * y espera la decisión del usuario.
-   */
-  async handlePWAInstall() {
-    if (!this.deferredPrompt) return;
-    this.deferredPrompt.prompt();
-    await this.deferredPrompt.userChoice;
-    this.deferredPrompt = null;
-    this.requestUpdate();
   }
 
   handleInput(e) {
